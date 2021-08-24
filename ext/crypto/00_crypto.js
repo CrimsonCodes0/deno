@@ -34,6 +34,10 @@
     Uint32Array,
     Uint8ClampedArray,
     TypeError,
+    TypedArrayPrototypeGetSymbolToStringTag,
+    TypedArrayPrototypeGetBuffer,
+    TypedArrayPrototypeGetByteOffset,
+    TypedArrayPrototypeGetByteLength,
   } = window.__bootstrap.primordials;
 
   // P-521 is not yet supported.
@@ -966,28 +970,30 @@
         prefix,
         context: "Argument 1",
       });
-      if (
-        !(
-          arrayBufferView instanceof Int8Array ||
-          arrayBufferView instanceof Uint8Array ||
-          arrayBufferView instanceof Uint8ClampedArray ||
-          arrayBufferView instanceof Int16Array ||
-          arrayBufferView instanceof Uint16Array ||
-          arrayBufferView instanceof Int32Array ||
-          arrayBufferView instanceof Uint32Array ||
-          arrayBufferView instanceof BigInt64Array ||
-          arrayBufferView instanceof BigUint64Array
-        )
-      ) {
-        throw new DOMException(
-          "The provided ArrayBufferView is not an integer array type",
-          "TypeMismatchError",
-        );
+      switch (TypedArrayPrototypeGetSymbolToStringTag(arrayBufferView)) {
+        case "Int8Array":
+        case "Uint8Array":
+        case "Uint8ClampedArray":
+        case "Int16Array":
+        case "Uint16Array":
+        case "Int32Array":
+        case "Uint32Array":
+        case "BigInt64Array":
+        case "BigUint64Array": {
+          break;
+        }
+        default: {
+          throw new DOMException(
+            "The provided ArrayBufferView is not an integer array type",
+            "TypeMismatchError",
+          );
+        }
       }
+
       const ui8 = new Uint8Array(
-        arrayBufferView.buffer,
-        arrayBufferView.byteOffset,
-        arrayBufferView.byteLength,
+        TypedArrayPrototypeGetBuffer(arrayBufferView),
+        TypedArrayPrototypeGetByteOffset(arrayBufferView),
+        TypedArrayPrototypeGetByteLength(arrayBufferView),
       );
       core.opSync("op_crypto_get_random_values", ui8);
       return arrayBufferView;
